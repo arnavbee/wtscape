@@ -1,9 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
   console.log("DOMContentLoaded event fired.");
 
-  // Sample data for demonstration purposes (replace with your actual data)
   const graphData = {
     nodes: [
+      // ... your nodes ...
       {
         id: "node1",
         label: "Node 1",
@@ -998,9 +998,8 @@ document.addEventListener("DOMContentLoaded", function () {
         url: "Yes, the bubble is back.html",
       },
     ],
-
     edges: [
-      // ... your existing edges ...
+      // ... your edges ...
       { source: "node8", target: "node1" },
       { source: "node8", target: "node2" },
       { source: "node8", target: "node3" },
@@ -1107,9 +1106,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
   console.log("Graph data:", graphData);
 
-  // Create the graph visualization using D3.js
-  const width = 5000;
-  const height = 5000;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const radius = Math.min(width, height) * 0.4; // Adjust the radius as needed
+
+  const centerX = width / 2;
+  const centerY = height / 2;
+
+  const simulation = d3
+    .forceSimulation(graphData.nodes)
+    .force(
+      "link",
+      d3.forceLink(graphData.edges).id((d) => d.id)
+    )
+    .force("charge", d3.forceManyBody().strength(-50)) // Increase the strength to make nodes attract each other
+    .force("center", d3.forceCenter(centerX, centerY)) // Updated this line
+    .force("collision", d3.forceCollide().radius(20)) // Adjust the radius as needed
+    .alpha(0) // Set a low initial alpha value
+    .alphaDecay(0) // Set a low alphaDecay value
+
+    .on("tick", ticked);
+
+  console.log("Simulation created:", simulation);
 
   const svg = d3
     .select("#graph")
@@ -1118,41 +1136,11 @@ document.addEventListener("DOMContentLoaded", function () {
     .attr("height", height)
     .attr("stroke", "white"); // Change edge color here;
 
-  const spacing = 80; // Adjust this value for spacing between nodes
-
-  const simulation = d3
-    .forceSimulation(graphData.nodes)
-    .force(
-      "link",
-      d3.forceLink(graphData.edges).id((d) => d.id)
-    )
-    .force("charge", d3.forceManyBody().strength(-200)) // This line was added/modified
-    .force("center", d3.forceCenter(width / 2, height / 10));
-
-  console.log("Simulation created:", simulation);
-
-  function highlightEdge(event, d) {
-    link.attr("stroke", (l) => (l === d ? "purple" : "gray"));
-    node.attr("fill", (n) =>
-      n === d.source || n === d.target ? "purple" : "lightgray"
-    );
-  }
-
-  // Function to reset edge and node colors
-  function unhighlightEdge() {
-    link.attr("stroke", "gray");
-    node.attr("fill", (d) =>
-      d.label === "Node 8" || d.label === "Node 55" ? "gray" : "white"
-    );
-  }
-
   const link = svg
     .selectAll("line")
     .data(graphData.edges)
     .enter()
-    .append("line")
-    .attr("stroke", "gray")
-    .attr("stroke-width", 1);
+    .append("line");
 
   console.log("Links created:", link);
 
@@ -1161,15 +1149,8 @@ document.addEventListener("DOMContentLoaded", function () {
     .data(graphData.nodes)
     .enter()
     .append("circle")
-
-    .attr("r", (d) => {
-      if (d.label === "Node 8") return 8;
-      if (d.label === "Node 55") return 8;
-      // Add more conditions as needed
-      return 2; // Default radius
-    })
-
-    .attr("fill", "grey")
+    .attr("r", 10)
+    .attr("fill", "steelblue")
     .call(
       d3
         .drag()
@@ -1189,17 +1170,26 @@ document.addEventListener("DOMContentLoaded", function () {
     .attr("class", "tooltip")
     .style("opacity", 0);
 
-  simulation.on("tick", () => {
+  function ticked() {
     link
       .attr("x1", (d) => d.source.x)
       .attr("y1", (d) => d.source.y)
       .attr("x2", (d) => d.target.x)
       .attr("y2", (d) => d.target.y);
 
+    node;
     node
-      .attr("cx", (d) => Math.max(10, Math.min(width - 10, d.x)))
-      .attr("cy", (d) => Math.max(10, Math.min(height - 10, d.y)));
-  });
+      .attr(
+        "cx",
+        (d) =>
+          (d.x = Math.max(centerX - radius, Math.min(centerX + radius, d.x)))
+      )
+      .attr(
+        "cy",
+        (d) =>
+          (d.y = Math.max(centerY - radius, Math.min(centerY + radius, d.y)))
+      );
+  }
 
   function dragstarted(event, d) {
     if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -1236,29 +1226,3 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 });
-
-// // Create the boundary polygon (circle)
-// const boundaryPoints = d3
-//   .range(0, Math.PI * 2, (Math.PI * 2) / graphData.nodes.length)
-//   .map((angle) => {
-//     const radius = 1000; // Adjust the radius as needed
-//     const x = width / 2 + radius * Math.cos(angle);
-//     const y = height / 2 + radius * Math.sin(angle);
-//     return [x, y];
-//   });
-// const boundary = d3.polygonHull(boundaryPoints);
-
-// // // Constrain nodes within the boundary
-// // function constrainWithinBoundary(node) {
-// //   const [cx, cy] = [width / 2, height / 2];
-// //   const radius = 1000; // Adjust the radius to match the boundary
-// //   const dx = node.x - cx;
-// //   const dy = node.y - cy;
-// //   const distance = Math.sqrt(dx * dx + dy * dy);
-
-// //   if (distance > radius) {
-// //     const angle = Math.atan2(dy, dx);
-// //     node.x = cx + radius * Math.cos(angle);
-// //     node.y = cy + radius * Math.sin(angle);
-// //   }
-// // }
