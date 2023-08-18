@@ -1108,7 +1108,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const width = window.innerWidth;
   const height = window.innerHeight;
-  const radius = Math.min(width, height) * 0.4; // Adjust the radius as needed
+  const radius = Math.min(width, height) * 0.5; // Adjust the radius as needed
 
   const centerX = width / 2;
   const centerY = height / 2;
@@ -1121,8 +1121,8 @@ document.addEventListener("DOMContentLoaded", function () {
     )
     .force("charge", d3.forceManyBody().strength(-50)) // Increase the strength to make nodes attract each other
     .force("center", d3.forceCenter(centerX, centerY)) // Updated this line
-    .force("collision", d3.forceCollide().radius(20)) // Adjust the radius as needed
-    .alpha(0) // Set a low initial alpha value
+    .force("collision", d3.forceCollide().radius(30)) // Adjust the radius as needed
+    .alpha(0.001) // Set a low initial alpha value
     .alphaDecay(0) // Set a low alphaDecay value
 
     .on("tick", ticked);
